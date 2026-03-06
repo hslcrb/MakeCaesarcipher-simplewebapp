@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카이사르 암호 변환기</title>
+    <style>
+        /* 기본 테마 (라이트 모드 - 화이트 바탕, 검정 글씨) */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --border-color: #000000;
+            --btn-bg: #000000;
+            --btn-text: #ffffff;
+        }
+
+        /* 다크 모드 (검정 바탕, 화이트 글씨) */
+        .dark-mode {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --border-color: #ffffff;
+            --btn-bg: #ffffff;
+            --btn-text: #000000;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            border: 2px solid var(--border-color);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        .header-btns {
+            display: flex;
+            gap: 5px;
+        }
+
+        .toggle-btn {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-btn:hover {
+            background-color: var(--text-color);
+            color: var(--bg-color);
+        }
+
+        label.main-label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        textarea, input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        textarea:focus, input[type="number"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--text-color);
+        }
+
+        input[type="number"]:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-style: dashed;
+        }
+
+        /* 체크박스 한 줄 강제 및 커스텀 디자인 */
+        .checkbox-group {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap; /* 줄바꿈 방지 */
+            gap: 15px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            overflow-x: auto; /* 너무 좁을 시 스크롤 */
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            font-weight: normal;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* 커스텀 체크박스 (흑백) */
+        input[type="checkbox"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-color);
+            background-color: transparent;
+            margin-right: 6px;
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        input[type="checkbox"]:checked {
+            background-color: var(--text-color);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            top: 1px;
+            left: 4px;
+            width: 4px;
+            height: 8px;
+            border: solid var(--bg-color);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            opacity: 0.8;
+        }
+
+        .note {
+            font-size: 11px;
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+
+        .footer {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--border-color);
+            text-align: center;
+            font-size: 11px;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        .footer a {
+            color: inherit;
+            text-decoration: underline;
+        }
+
+        .footer a:hover {
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1 id="appTitle">카이사르 암호</h1>
+            <div class="header-btns">
+                <button id="langToggleBtn" class="toggle-btn" onclick="toggleLanguage()">English</button>
+                <button id="themeToggleBtn" class="toggle-btn" onclick="toggleTheme()">다크모드</button>
+            </div>
+        </div>
+
+        <label for="inputText" id="lblInput" class="main-label">입력 텍스트 (영문)</label>
+        <textarea id="inputText" rows="4" placeholder="변환할 텍스트를 입력하세요..."></textarea>
+        <div id="noteInput" class="note">* 영문 알파벳만 변환되며, 숫자/기호/한글은 그대로 유지됩니다.</div>
+
+        <label for="shiftValue" id="lblShift" class="main-label">이동 값 (Shift)</label>
+        <div class="checkbox-group">
+            <label><input type="checkbox" class="shift-lock" checked onchange="handleLockChange()"> <span id="lblLock1">잠금 1</span></label>
+            <label><input type="checkbox" class="shift-lock" checked onchange="handleLockChange()"> <span id="lblLock2">잠금 2</span></label>
+            <label><input type="checkbox" class="shift-lock" checked onchange="handleLockChange()"> <span id="lblLock3">잠금 3</span></label>
+        </div>
+        <div id="noteLock" class="note" style="margin-bottom: 5px;">* 3개의 잠금을 모두 해제해야 값을 변경할 수 있습니다.</div>
+        <input type="number" id="shiftValue" value="3" min="1" max="25" disabled>
+
+        <div class="button-group">
+            <button id="btnEncode" class="action-btn" onclick="processCipher(true)">부호화 (암호화)</button>
+            <button id="btnDecode" class="action-btn" onclick="processCipher(false)">복호화 (해독)</button>
+        </div>
+
+        <label for="outputText" id="lblOutput" class="main-label">결과</label>
+        <textarea id="outputText" rows="4" readonly placeholder="결과가 여기에 표시됩니다."></textarea>
+
+        <div class="footer">
+            <div id="footerDate">생성일: GMT+9 KST 한국표준시 2026년 병오년 3월 6일 금요일</div>
+            <div>&copy; 2008-2026 Rheehose (Rhee Creative). MIT License.</div>
+            <div style="margin-top: 8px;">
+                <a href="https://github.com/hslcrb/MakeCaesarcipher-simplewebapp" target="_blank" id="githubRepoLink">GitHub 리포지토리</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 언어 데이터 세트 ---
+        const i18n = {
+            ko: {
+                title: "카이사르 암호",
+                themeDark: "다크모드",
+                themeLight: "라이트모드",
+                langBtn: "English",
+                inputLabel: "입력 텍스트 (영문)",
+                inputPlaceholder: "변환할 텍스트를 입력하세요...",
+                inputNote: "* 영문 알파벳만 변환되며, 숫자/기호/한글은 그대로 유지됩니다.",
+                shiftLabel: "이동 값 (Shift)",
+                lock: "잠금",
+                lockNote: "* 3개의 잠금을 모두 해제해야 값을 변경할 수 있습니다.",
+                btnEncode: "부호화 (암호화)",
+                btnDecode: "복호화 (해독)",
+                outputLabel: "결과",
+                outputPlaceholder: "결과가 여기에 표시됩니다.",
+                footerDate: "생성일: GMT+9 KST 한국표준시 2026년 병오년 3월 6일 금요일",
+                githubLink: "GitHub 리포지토리"
+            },
+            en: {
+                title: "Caesar Cipher",
+                themeDark: "Dark Mode",
+                themeLight: "Light Mode",
+                langBtn: "한국어",
+                inputLabel: "Input Text (English)",
+                inputPlaceholder: "Enter text to convert...",
+                inputNote: "* Only English alphabets are converted. Others remain unchanged.",
+                shiftLabel: "Shift Value",
+                lock: "Lock",
+                lockNote: "* Unlock all 3 checkboxes to change the shift value.",
+                btnEncode: "Encode",
+                btnDecode: "Decode",
+                outputLabel: "Result",
+                outputPlaceholder: "Result will be shown here.",
+                footerDate: "Created: GMT+9 KST Friday, March 6, 2026 (Year of the Fire Horse)",
+                githubLink: "GitHub Repository"
+            }
+        };
+
+        let currentLang = 'ko';
+
+        // --- 다크모드/라이트모드 토글 ---
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+            updateUI(); // 테마 버튼 텍스트 업데이트를 위해 호출
+        }
+
+        // --- 언어 토글 ---
+        function toggleLanguage() {
+            currentLang = currentLang === 'ko' ? 'en' : 'ko';
+            updateUI();
+        }
+
+        // --- UI 텍스트 업데이트 ---
+        function updateUI() {
+            const t = i18n[currentLang];
+            const isDark = document.body.classList.contains('dark-mode');
+
+            document.getElementById('appTitle').textContent = t.title;
+            document.title = t.title;
+            document.getElementById('langToggleBtn').textContent = t.langBtn;
+            document.getElementById('themeToggleBtn').textContent = isDark ? t.themeLight : t.themeDark;
+            
+            document.getElementById('lblInput').textContent = t.inputLabel;
+            document.getElementById('inputText').placeholder = t.inputPlaceholder;
+            document.getElementById('noteInput').textContent = t.inputNote;
+
+            document.getElementById('lblShift').textContent = t.shiftLabel;
+            document.getElementById('lblLock1').textContent = t.lock + " 1";
+            document.getElementById('lblLock2').textContent = t.lock + " 2";
+            document.getElementById('lblLock3').textContent = t.lock + " 3";
+            document.getElementById('noteLock').textContent = t.lockNote;
+
+            document.getElementById('btnEncode').textContent = t.btnEncode;
+            document.getElementById('btnDecode').textContent = t.btnDecode;
+
+            document.getElementById('lblOutput').textContent = t.outputLabel;
+            document.getElementById('outputText').placeholder = t.outputPlaceholder;
+
+            document.getElementById('footerDate').textContent = t.footerDate;
+            document.getElementById('githubRepoLink').textContent = t.githubLink;
+        }
+
+        // --- 잠금 체크박스 처리 ---
+        function handleLockChange() {
+            const locks = document.querySelectorAll('.shift-lock');
+            const shiftInput = document.getElementById('shiftValue');
+            
+            let allUnchecked = true;
+            locks.forEach(lock => {
+                if (lock.checked) {
+                    allUnchecked = false;
+                }
+            });
+
+            if (allUnchecked) {
+                shiftInput.disabled = false;
+            } else {
+                shiftInput.disabled = true;
+                shiftInput.value = 3; 
+            }
+        }
+
+        // --- 카이사르 암호 처리 ---
+        function processCipher(isEncode) {
+            const text = document.getElementById('inputText').value;
+            let shift = parseInt(document.getElementById('shiftValue').value, 10);
+
+            if (isNaN(shift)) shift = 0;
+
+            shift = shift % 26;
+            if (shift < 0) shift += 26;
+            if (!isEncode) shift = (26 - shift) % 26;
+
+            let result = '';
+            for (let i = 0; i < text.length; i++) {
+                let char = text[i];
+                if (char.match(/[a-z]/i)) {
+                    let code = text.charCodeAt(i);
+                    let isUpperCase = (code >= 65 && code <= 90);
+                    let base = isUpperCase ? 65 : 97;
+                    char = String.fromCharCode(((code - base + shift) % 26) + base);
+                }
+                result += char;
+            }
+            document.getElementById('outputText').value = result;
+        }
+
+        // 초기화 (언어 세팅 적용)
+        updateUI();
+    </script>
+</body>
+</html>
